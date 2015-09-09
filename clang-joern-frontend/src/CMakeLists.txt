@@ -51,8 +51,8 @@ target_link_libraries(clang-joern
   clangParse
   clangSema
   clangStaticAnalyzerFrontend
-  clangStaticAnalyzerCore
   clangStaticAnalyzerCheckers
+  clangStaticAnalyzerCore
   clangRewriteFrontend
   clangRewrite
   clangAnalysis

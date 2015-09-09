@@ -98,9 +98,9 @@ int main(int argc, const char **argv) {
   std::unique_ptr<FrontendActionFactory> FrontendFactory;
 
   // Choose the correct factory based on the selected mode.
-//  if (Analyze)
-//    FrontendFactory = newFrontendActionFactory<clang::ento::AnalysisAction>();
-//  else
+  if (Analyze)
+    FrontendFactory = newFrontendActionFactory<clang::ento::AnalysisAction>();
+  else
     FrontendFactory = newFrontendActionFactory(&CJFactory);
 
   return Tool.run(FrontendFactory.get());
