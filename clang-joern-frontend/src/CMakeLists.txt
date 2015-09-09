@@ -80,8 +80,7 @@ target_link_libraries(clang-joern
 )
 
 # POSIX
-#set( CMAKE_INCLUDE_PATH "/usr/include")
-#set( CMAKE_LIBRARY_PATH "/usr/lib/x86_64-linux-gnu/libncurses.so")
+set(CMAKE_INSTALL_PREFIX "/usr")
 target_link_libraries(clang-joern
     pthread
     z
