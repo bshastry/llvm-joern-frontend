@@ -44,10 +44,17 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -std=c++11")
 # Clang dependencies.
 target_link_libraries(clang-joern
   clangFrontend
+  clangCodeGen
+  clangIndex
   clangSerialization
   clangDriver
   clangParse
   clangSema
+  clangStaticAnalyzerFrontend
+  clangStaticAnalyzerCore
+  clangStaticAnalyzerCheckers
+  clangRewriteFrontend
+  clangRewrite
   clangAnalysis
   clangAST
   clangBasic
