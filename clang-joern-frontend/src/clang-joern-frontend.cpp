@@ -1,8 +1,10 @@
 #include "clang/AST/ASTConsumer.h"
 #include "clang/Driver/Options.h"
 #include "clang/Frontend/ASTConsumers.h"
-#include "clang/Frontend/FrontendActions.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/FrontendAction.h"
 #include "clang/StaticAnalyzer/Frontend/FrontendActions.h"
+#include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Tooling/CommonOptionsParser.h"
 #include "clang/Tooling/Tooling.h"
 #include "llvm/Option/OptTable.h"
@@ -11,6 +13,8 @@
 using namespace clang::driver;
 using namespace clang::tooling;
 using namespace llvm;
+
+// Clone of clang-check
 
 // CommonOptionsParser declares HelpMessage with a description of the common
 // command-line options related to the compilation database and input files.
@@ -54,32 +58,75 @@ static cl::opt<std::string> ASTDumpFilter(
 static cl::opt<bool>
 Analyze("analyze", cl::desc(Options->getOptionHelpText(options::OPT_analyze)),
         cl::cat(ClangJoernCategory));
+static cl::opt<bool>
+ASTExport("ast-export", cl::desc("Export Clang ASTs to Neo4j CSV batch importer format i.e., nodes.csv and edges.csv"),
+        cl::cat(ClangJoernCategory));
 
 namespace {
+  class ClangASTExporter
+    : public clang::RecursiveASTVisitor<ClangASTExporter> {
+  public:
+    explicit ClangASTExporter(clang::ASTContext *Context)
+      : Context(Context) {}
+
+//    bool VisitDecl(clang::Decl *Declaration) {
+//      Declaration->dump();
+//      return true;
+//    }
+
+    bool VisitType(clang::Type *Type) {
+      llvm::errs() << Type->getTypeClassName() << "\n";
+      return true;
+    }
+
+  private:
+    clang::ASTContext *Context;
+  };
+
+  class ClangASTExportConsumer : public clang::ASTConsumer {
+  public:
+    explicit ClangASTExportConsumer(clang::ASTContext *Context)
+      : Visitor(Context) {}
+    virtual void HandleTranslationUnit(clang::ASTContext &Context) {
+      // Traversing the translation unit decl via a RecursiveASTVisitor
+      // will visit all nodes in the AST.
+      Visitor.TraverseDecl(Context.getTranslationUnitDecl());
+    }
+  private:
+    // A RecursiveASTVisitor implementation.
+    ClangASTExporter Visitor;
+  };
+
+  class ClangASTExportAction : public clang::ASTFrontendAction {
+  public:
+    virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
+      clang::CompilerInstance &Compiler, llvm::StringRef InFile) {
+      return std::unique_ptr<clang::ASTConsumer>(
+          new ClangASTExportConsumer(&Compiler.getASTContext()));
+    }
+  };
+
+  // This is a clone of clang-check. Can be removed later.
   class ClangJoernActionFactory {
   public:
     std::unique_ptr<clang::ASTConsumer> newASTConsumer() {
       if (ASTList)
         return clang::CreateASTDeclNodeLister();
+
       if (ASTDump)
         return clang::CreateASTDumper(ASTDumpFilter, /*DumpDecls=*/true,
                                       /*DumpLookups=*/false);
       if (ASTPrint)
         return clang::CreateASTPrinter(&llvm::outs(), ASTDumpFilter);
+
       return llvm::make_unique<clang::ASTConsumer>();
     }
   };
-}
+} // end of anonymous namespace
 
 int main(int argc, const char **argv) {
 
   llvm::sys::PrintStackTraceOnErrorSignal();
-
-  // Initialize targets for clang module support.
-//  llvm::InitializeAllTargets();
-//  llvm::InitializeAllTargetMCs();
-//  llvm::InitializeAllAsmPrinters();
-//  llvm::InitializeAllAsmParsers();
 
   CommonOptionsParser OptionsParser(argc, argv, ClangJoernCategory);
   ClangTool Tool(OptionsParser.getCompilations(),
@@ -100,10 +147,10 @@ int main(int argc, const char **argv) {
   // Choose the correct factory based on the selected mode.
   if (Analyze)
     FrontendFactory = newFrontendActionFactory<clang::ento::AnalysisAction>();
+  else if (ASTExport)
+    FrontendFactory = newFrontendActionFactory<ClangASTExportAction>();
   else
     FrontendFactory = newFrontendActionFactory(&CJFactory);
 
   return Tool.run(FrontendFactory.get());
-
-//  return Tool.run(newFrontendActionFactory<clang::SyntaxOnlyAction>().get());
 }
