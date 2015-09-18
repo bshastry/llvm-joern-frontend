@@ -10,6 +10,8 @@
 #include "llvm/Option/OptTable.h"
 #include "llvm/Support/Signals.h"
 
+#include <fstream>
+
 using namespace clang::driver;
 using namespace clang::tooling;
 using namespace llvm;
@@ -67,7 +69,15 @@ namespace {
     : public clang::RecursiveASTVisitor<ClangASTExporter> {
   public:
     explicit ClangASTExporter(clang::ASTContext *Context)
-      : Context(Context) {}
+      : Context(Context) {
+      nodeFile.open("nodes.csv");
+      edgeFile.open("edges.csv");
+    }
+
+    void closeFiles() {
+      nodeFile.close();
+      edgeFile.close();
+    }
 
 //    bool VisitDecl(clang::Decl *Declaration) {
 //      Declaration->dump();
@@ -75,12 +85,13 @@ namespace {
 //    }
 
     bool VisitType(clang::Type *Type) {
-      llvm::errs() << Type->getTypeClassName() << "\n";
+      nodeFile << Type->getTypeClassName() << "\n";
       return true;
     }
 
   private:
     clang::ASTContext *Context;
+    std::ofstream nodeFile, edgeFile;
   };
 
   class ClangASTExportConsumer : public clang::ASTConsumer {
@@ -91,6 +102,7 @@ namespace {
       // Traversing the translation unit decl via a RecursiveASTVisitor
       // will visit all nodes in the AST.
       Visitor.TraverseDecl(Context.getTranslationUnitDecl());
+      Visitor.closeFiles();
     }
   private:
     // A RecursiveASTVisitor implementation.
