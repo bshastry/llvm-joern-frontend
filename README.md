@@ -4,6 +4,8 @@ This repository contains software that exports Clang internals (e.g., AST) into 
 
 ### Usage
 
+This is work in progress, so take instructions here with spoonsfull of salt.
+
 Clang libtooling tool can be used as follows:
 
 ```bash
@@ -13,9 +15,11 @@ $ cd build
 $ cmake -DCJ_LLVM_BUILD_ROOT_PATH=<PATH_TO_LLVM-3.6> -DCJ_LLVM_ROOT_PATH=<PATH_TO_LLVM-3.6> ../src/ &> /dev/null
 $ make && make install
 $ cd $SOME_PROJECT_SRC
+$ clang-joern -help | less
 $ clang-joern -p <PATH_TO_PROJECT_BUILD> -ast-dump <PATH_TO_SOME_SOURCE_FILE>
 ```
 
+Work on the AST Export feature (-ast-export) is in progress.
 
 Clangpy bindings can be used as follows:
 
@@ -23,6 +27,8 @@ Clangpy bindings can be used as follows:
 $ cd $WORKING_DIR
 $ ./clang-print-ast.py tests/*.c
 ```
+
+Since libclang bindings are inferior to libtooling in terms of richness of AST, development of bindings-based tool is discontinued.
 
 ### Acknowledgements
 
