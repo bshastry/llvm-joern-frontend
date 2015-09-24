@@ -12,6 +12,7 @@
 
 #include "exporters/csv-writer/csv-writer.h"
 
+using namespace clang;
 using namespace clang::driver;
 using namespace clang::tooling;
 using namespace llvm;
@@ -66,23 +67,50 @@ ASTExport("ast-export", cl::desc("Export Clang ASTs to Neo4j CSV batch importer 
 
 namespace {
   class ClangASTExporter
-    : public clang::RecursiveASTVisitor<ClangASTExporter> {
+    : public RecursiveASTVisitor<ClangASTExporter> {
   public:
-    explicit ClangASTExporter(clang::ASTContext *Context)
-      : Context(Context) {}
+    explicit ClangASTExporter(ASTContext *Context)
+      : Context(Context), cW(Context) {}
 
-    bool VisitDecl(clang::Decl *Declaration) {
-      cW.exportDecl(Declaration);
+    bool VisitDecl(Decl *D) {
+      cW.exportDecl(D);
       return true;
     }
 
-//    bool VisitType(clang::Type *Type) {
-//      return true;
-//    }
+    bool VisitStmt(Stmt *S) {
+      cW.exportStmt(S);
+      return true;
+    }
+
+    bool VisitExpr(Expr *E) {
+      cW.exportExpr(E);
+      return true;
+    }
+
+    bool TraverseDecl(Decl *D) {
+      // Do something and call base class's traversedecl.
+      // The base class's traversedecl actually traverses the AST.
+      // Here we only use the entry point for writing an entry into
+      // the CSV file(s)
+      cW.writeNodeRowWrapper();
+      cW.flushBuffers();
+      return getBaseRAV().TraverseDecl(D);
+    }
+
+    bool TraverseStmt(Stmt *S) {
+      cW.writeNodeRowWrapper();
+      cW.flushBuffers();
+      return getBaseRAV().TraverseStmt(S);
+    }
 
   private:
-    clang::ASTContext *Context;
+    ASTContext *Context;
     exporter::csvWriter cW;
+
+    RecursiveASTVisitor<ClangASTExporter> &getBaseRAV() {
+      return *static_cast<RecursiveASTVisitor<ClangASTExporter> *>(this);
+    }
+
   };
 
   class ClangASTExportConsumer : public clang::ASTConsumer {
