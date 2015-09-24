@@ -3,15 +3,18 @@
 
 #include "clang/AST/ASTContext.h"
 
-using namespace clang;
-
 namespace exporter {
 
 class IExporter {
 public:
-  virtual void exportDecl(const Decl *D) = 0;
-  virtual void exportStmt(const Stmt *S) = 0;
+  IExporter(clang::ASTContext *ASTC) : Context(ASTC) {}
+  virtual void exportDecl(const clang::Decl *D) = 0;
+  virtual void exportStmt(const clang::Stmt *S) = 0;
+  virtual void exportExpr(const clang::Expr *E) = 0;
   virtual ~IExporter() {}
+  clang::ASTContext *getASTContext() { return Context; }
+private:
+  clang::ASTContext *Context;
 };
 
 } // end of exporter namespace
