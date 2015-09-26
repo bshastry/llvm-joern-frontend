@@ -9,7 +9,24 @@ namespace exporter {
 class csvWriter : public IExporter {
 public:
 	// Typedefs
-	enum NODECOL : int {
+	// nodeIDTy 	=>	nodeID, typically thousands per TU
+	// colIndexTy	=>	csv column index, a non-negative number
+	// codePropTy	=>	code property in nodes.csv/edges.csv
+	// csvRowTy	=>	<colIndexTy, codePropTy> map in nodes.csv/edges.csv
+	// fileTy	=>	std output filestream
+	// csvHeaderTy	=>	vector of codePropTy; for nodes/edges.csv headers only
+	// declNodeMapTy	=>	decl<->nodeID map
+	// stmtNodeMapTy	=>	stmt<->nodeID map
+	typedef	unsigned long long			nodeIDTy;
+	typedef unsigned				colIndexTy;
+	typedef	std::string				codePropTy;
+	typedef	std::map<colIndexTy, codePropTy>	csvRowTy;
+	typedef	std::ofstream				fileTy;
+	typedef std::vector<codePropTy>			csvHeaderTy;
+	typedef std::map<const clang::Decl*, nodeIDTy>	declNodeMapTy;
+	typedef std::map<const clang::Stmt*, nodeIDTy>	stmtNodeMapTy;
+
+	enum NODECOL : colIndexTy {
 	  NODEID	=	0,
 	  NODEKIND	=	1,
 	  LOC		=	2,
@@ -19,13 +36,34 @@ public:
 	  VALUE		=	6,
 	  CASTKIND	=	7,
 	  DECLNAME	=	8,
+	  SEMCONTEXT	=	9,
+	  LEXCONTEXT	=	10,
+	  DECLQUAL	=	11,
+//	  DECLREFNODE	=	12,
 	  FIRST		=	NODEID,
-	  LAST		=	DECLNAME
+	  LAST		=	DECLQUAL
 	};
 
-	typedef	std::map<int, std::string>		csvRowTy;
-	typedef	std::ofstream				fileTy;
-	typedef std::vector<std::string>		csvHeaderTy;
+	enum EDGECOL : colIndexTy {
+	  ENODEID1	=	0,
+	  ENODEID2	=	1,
+	  ETYPE		=	2,
+	  EFIRST	=	ENODEID1,
+	  ELAST		=	ETYPE
+	};
+
+	enum EDGEREL : colIndexTy {
+	  IS_PARENT_OF		=	0,
+	  SEMANTIC_PARENT	=	1,
+	  DECLREF_EXPR		=	2,
+	  NUM_RELS		=	DECLREF_EXPR + 1
+	};
+
+	const char *EDGERELKEYS[NUM_RELS] = {
+	    "is_parent_of",
+	    "semantic_parent",
+	    "references_decl"
+	};
 
 	// Interface and object bring-up/down
 	csvWriter(clang::ASTContext *ASTC)
@@ -34,26 +72,50 @@ public:
 	virtual ~csvWriter() { closeFiles(); }
 
 	void exportDecl(const clang::Decl *D) override;
+	void exportNamedDecl(const clang::NamedDecl *ND) override;
+	void exportTranslationUnitDecl(std::string filename) override;
 	void exportStmt(const clang::Stmt *S) override;
 	void exportExpr(const clang::Expr *E) override;
+	void exportCastExpr(const clang::CastExpr *E) override;
+	void exportDeclRefExpr(const clang::DeclRefExpr *DRE) override;
 
 	// Utility
 	void init();
 	void closeFiles();
-	void writeNodeRow(csvRowTy &row, fileTy &file);
+	void writeRow(csvRowTy &row, fileTy &file, colIndexTy start,
+	                  colIndexTy end);
+	void writeEdgeRow(codePropTy node1, codePropTy node2, codePropTy rel);
 	void writeNodeRowWrapper();
+	void writeEdgeRowWrapper();
 	void writeHeaders();
 	void flushBuffers();
-	std::string printSourceRange(clang::SourceRange SR);
-	std::string printLocation(clang::SourceLocation SL);
+	codePropTy getNodeIDFromDeclPtr(const clang::Decl *D);
+	codePropTy getNodeIDFromStmtPtr(const clang::Stmt *S);
+
+	// ASTDumper
+	codePropTy getSourceRange(clang::SourceRange SR);
+	codePropTy getLocation(clang::SourceLocation SL);
+	codePropTy getBareType(clang::QualType T, bool Desugar = true);
+	codePropTy getType(clang::QualType T);
+//	codePropTy exportTypeAsChild(clang::QualType T);
+//	codePropTy exportTypeAsChild(const clang::Type *T);
+//	codePropTy exportBareDeclRef(const clang::Decl *Node);
+//	codePropTy exportDeclRef(const clang::Decl *Node, const char *Label = nullptr);
+//	bool hasNodes(const clang::DeclContext *DC);
+//	codePropTy exportDeclContext(const clang::DeclContext *DC);
+//	codePropTy exportLookups(const clang::DeclContext *DC, bool exportDecls);
+//	codePropTy exportAttr(const clang::Attr *A);
+	// ASTDumper
 
 	// Data members
 	fileTy	 			nodeFile, edgeFile;
-	unsigned long long 		nodeID;
+	nodeIDTy	 		nodeID;
 	const char 			*lastLocFilename;
 	unsigned 			lastLocLineNum;
 	csvRowTy			nodeRowMap;
 	csvRowTy			edgeRowMap;
+	declNodeMapTy			declNodeMap;
+	stmtNodeMapTy			stmtNodeMap;
 };
 
 } // end of exporter namespace
