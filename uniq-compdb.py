@@ -3,18 +3,32 @@
 import json
 import argparse
 import sys
+import os
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Dedup compdb entries for AST export')
-    parser.add_argument('infile', nargs='+', type=argparse.FileType('r'), help="Compile database json file")
-    parser.add_argument('outfilename', nargs='+', help="Output json file name")
+    ## Argparse boilerplat
+    parser = argparse.ArgumentParser(description='Dedup compdb entries for AST export. Renames original json file as compile_commands_orig.json')
+    parser.add_argument('infilename', nargs='?', help="Path to compile database json file", default='compile_commands.json')
+    parser.add_argument('outfilename', nargs='?', help="Output json file name", default='compile_commands.json')
     args = parser.parse_args()
-    infile = args.infile[0].read()
-    outfilename = args.outfilename[0]
-    args.infile[0].close()
 
-    ds = json.loads(infile)
+    infilename = args.infilename
+    outfilename = args.outfilename
+
+    ## Read compile_commands.json to infile
+    if not os.path.isfile(infilename):
+        print 'compile_commands.json does not exist in working dir. Need help? Use the -h flag'
+        exit()
+
+    with open(infilename) as infile:
+        buffer = infile.read()
+        ds = json.loads(buffer)
+        infile.close()
+
+    ## Rename 'compile_commands.json' to 'compile_commands_orig.json'
+    os.rename(infilename, 'compile_commands_orig.json')
+
     all_ids = [each['file'] for each in ds]
     unique_stuff = [ds[all_ids.index(id)] for id in set(all_ids)]
 
