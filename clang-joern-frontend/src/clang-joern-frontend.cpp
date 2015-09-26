@@ -69,14 +69,26 @@ namespace {
   class ClangASTExporter
     : public RecursiveASTVisitor<ClangASTExporter> {
   public:
-    explicit ClangASTExporter(ASTContext *Context)
-      : Context(Context), cW(Context) {}
+    explicit ClangASTExporter(ASTContext *Context, std::string inFile)
+      : Context(Context), cW(Context), sourceFilename(inFile) {}
 
+    // Decls
     bool VisitDecl(Decl *D) {
       cW.exportDecl(D);
       return true;
     }
 
+    bool VisitTranslationUnitDecl(TranslationUnitDecl *TUD) {
+      cW.exportTranslationUnitDecl(sourceFilename);
+      return true;
+    }
+
+    bool VisitNamedDecl(NamedDecl *ND) {
+      cW.exportNamedDecl(ND);
+      return true;
+    }
+
+    // Stmts
     bool VisitStmt(Stmt *S) {
       cW.exportStmt(S);
       return true;
@@ -84,6 +96,16 @@ namespace {
 
     bool VisitExpr(Expr *E) {
       cW.exportExpr(E);
+      return true;
+    }
+
+    bool VisitCastExpr(CastExpr *CE) {
+      cW.exportCastExpr(CE);
+      return true;
+    }
+
+    bool VisitDeclRefExpr(DeclRefExpr *DRE) {
+      cW.exportDeclRefExpr(DRE);
       return true;
     }
 
@@ -106,6 +128,7 @@ namespace {
   private:
     ASTContext *Context;
     exporter::csvWriter cW;
+    std::string sourceFilename;
 
     RecursiveASTVisitor<ClangASTExporter> &getBaseRAV() {
       return *static_cast<RecursiveASTVisitor<ClangASTExporter> *>(this);
@@ -115,8 +138,9 @@ namespace {
 
   class ClangASTExportConsumer : public clang::ASTConsumer {
   public:
-    explicit ClangASTExportConsumer(clang::ASTContext *Context)
-      : Visitor(Context) {}
+    explicit ClangASTExportConsumer(clang::ASTContext *Context,
+                                    std::string inFile)
+      : Visitor(Context, inFile) {}
     virtual void HandleTranslationUnit(clang::ASTContext &Context) {
       // Traversing the translation unit decl via a RecursiveASTVisitor
       // will visit all nodes in the AST.
@@ -130,9 +154,9 @@ namespace {
   class ClangASTExportAction : public clang::ASTFrontendAction {
   public:
     virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
-      clang::CompilerInstance &Compiler, llvm::StringRef InFile) {
+      clang::CompilerInstance &Compiler, llvm::StringRef InFile) override {
       return std::unique_ptr<clang::ASTConsumer>(
-          new ClangASTExportConsumer(&Compiler.getASTContext()));
+          new ClangASTExportConsumer(&Compiler.getASTContext(), InFile));
     }
   };
 
