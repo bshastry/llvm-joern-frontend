@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 
 using namespace clang;
+using namespace llvm;
 
 namespace exporter {
 
@@ -52,7 +53,7 @@ void csvWriter::writeHeaders() {
       "nodeID:ID", "nodeKind", "loc", "locRange", \
       "type", "valueKind", "value", "castKind", \
       "declName", "semcontext", "lexcontext", \
-      "declqual"
+      "declqual", "baredeclref"
   };
 
   csvHeaderTy edgeHeader = {
@@ -188,16 +189,20 @@ void csvWriter::exportCastExpr(const CastExpr *CE) {
 }
 
 void csvWriter::exportDeclRefExpr(const DeclRefExpr *DRE) {
-  codePropTy declNode = getNodeIDFromDeclPtr(cast<Decl>(DRE->getDecl()));
+  codePropTy declNode = getNodeIDFromDeclPtr(llvm::cast<Decl>(DRE->getDecl()));
 
+  // Only in rare cases is a decl that is reference is not yet visited by RAV
+  // In such cases, we export declref info to baredeclref column of the node
+  // that refs the decl i.e., referee decl info is dumped in referer's node row.
   if (declNode.empty())
-    return;
-
-  edgeRowMap.emplace(ENODEID1, std::to_string(nodeID));
-  edgeRowMap.emplace(ENODEID2, declNode);
-  edgeRowMap.emplace(ETYPE, EDGERELKEYS[DECLREF_EXPR]);
-  writeRow(edgeRowMap, edgeFile, EFIRST, ELAST);
-  edgeRowMap.clear();
+    nodeRowMap.emplace(BAREDECLREF, getBareDeclRef(llvm::cast<Decl>(DRE->getDecl())));
+  else {
+    edgeRowMap.emplace(ENODEID1, std::to_string(nodeID));
+    edgeRowMap.emplace(ENODEID2, declNode);
+    edgeRowMap.emplace(ETYPE, EDGERELKEYS[DECLREF_EXPR]);
+    writeRow(edgeRowMap, edgeFile, EFIRST, ELAST);
+    edgeRowMap.clear();
+  }
 }
 
 void csvWriter::closeFiles() {
@@ -285,6 +290,25 @@ codePropTy csvWriter::getNodeIDFromDeclPtr(const Decl *D) {
   if (i != declNodeMap.end())
     return std::to_string(i->second);
   return codePropTy();
+}
+
+codePropTy csvWriter::getBareDeclRef(const Decl *D) {
+  codePropTy declRefInfo;
+  llvm::raw_string_ostream OS(declRefInfo);
+
+  OS << "<";
+  OS << D->getDeclKindName();
+
+  if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
+    OS << ", " << ND->getDeclName();
+  }
+
+  if (const ValueDecl *VD = dyn_cast<ValueDecl>(D))
+    OS << ", " << getType(VD->getType());
+
+  OS << ">";
+
+  return OS.str();
 }
 
 codePropTy csvWriter::getNodeIDFromStmtPtr(const Stmt *S) {

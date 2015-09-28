@@ -39,9 +39,9 @@ public:
 	  SEMCONTEXT	=	9,
 	  LEXCONTEXT	=	10,
 	  DECLQUAL	=	11,
-//	  DECLREFNODE	=	12,
+	  BAREDECLREF	=	12,
 	  FIRST		=	NODEID,
-	  LAST		=	DECLQUAL
+	  LAST		=	BAREDECLREF
 	};
 
 	enum EDGECOL : colIndexTy {
@@ -65,11 +65,13 @@ public:
 	    "references_decl"
 	};
 
-	// Interface and object bring-up/down
+	// Constructor and copy set
 	csvWriter(clang::ASTContext *ASTC)
 	: IExporter(ASTC), nodeID(0), lastLocFilename(""),
 	  lastLocLineNum(~0U) { init(); }
 	virtual ~csvWriter() { closeFiles(); }
+	csvWriter(const csvWriter &copy) = delete;
+	csvWriter &operator=(const csvWriter &rhs) = delete;
 
 	void exportDecl(const clang::Decl *D) override;
 	void exportNamedDecl(const clang::NamedDecl *ND) override;
@@ -99,7 +101,7 @@ public:
 	codePropTy getType(clang::QualType T);
 //	codePropTy exportTypeAsChild(clang::QualType T);
 //	codePropTy exportTypeAsChild(const clang::Type *T);
-//	codePropTy exportBareDeclRef(const clang::Decl *Node);
+	codePropTy getBareDeclRef(const clang::Decl *D);
 //	codePropTy exportDeclRef(const clang::Decl *Node, const char *Label = nullptr);
 //	bool hasNodes(const clang::DeclContext *DC);
 //	codePropTy exportDeclContext(const clang::DeclContext *DC);
