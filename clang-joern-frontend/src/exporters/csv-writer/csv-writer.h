@@ -93,6 +93,8 @@ public:
 	void flushBuffers();
 	codePropTy getNodeIDFromDeclPtr(const clang::Decl *D);
 	codePropTy getNodeIDFromStmtPtr(const clang::Stmt *S);
+	void writeParentChildEdges(const
+	    llvm::ArrayRef<clang::ast_type_traits::DynTypedNode> &parentsOfNode);
 
 	// ASTDumper
 	codePropTy getSourceRange(clang::SourceRange SR);
@@ -102,6 +104,7 @@ public:
 //	codePropTy exportTypeAsChild(clang::QualType T);
 //	codePropTy exportTypeAsChild(const clang::Type *T);
 	codePropTy getBareDeclRef(const clang::Decl *D);
+	codePropTy getDeclQual(const clang::Decl *D);
 //	codePropTy exportDeclRef(const clang::Decl *Node, const char *Label = nullptr);
 //	bool hasNodes(const clang::DeclContext *DC);
 //	codePropTy exportDeclContext(const clang::DeclContext *DC);

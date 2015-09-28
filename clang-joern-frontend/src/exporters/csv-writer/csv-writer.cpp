@@ -1,9 +1,12 @@
 #include "csv-writer.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/Decl.h"
+#include "clang/Basic/Module.h"
+#include "clang/AST/ASTTypeTraits.h"
 #include <sys/stat.h>
 
 using namespace clang;
+using namespace clang::ast_type_traits;
 using namespace llvm;
 
 namespace exporter {
@@ -144,6 +147,45 @@ void csvWriter::exportDecl(const Decl *D) {
     if (!isa<TranslationUnitDecl>(D))
       nodeRowMap.emplace(LOC, getLocation(D->getLocation()));
     nodeRowMap.emplace(LOCRANGE, getSourceRange(D->getSourceRange()));
+    nodeRowMap.emplace(DECLQUAL, getDeclQual(D));
+  }
+
+  // Export parent-child to edges.csv
+  const auto &parentArray = getASTContext()->getParents(*D);
+  if (!parentArray.empty())
+    writeParentChildEdges(parentArray);
+}
+
+void csvWriter::writeParentChildEdges(const ArrayRef<DynTypedNode> &parentsOfNode) {
+  codePropTy parentNode;
+  for (auto &i : parentsOfNode) {
+      if (const Decl *D = i.get<Decl>())
+	parentNode = getNodeIDFromDeclPtr(D);
+      else if (const Stmt *S = i.get<Stmt>())
+        parentNode = getNodeIDFromStmtPtr(S);
+
+      // TODO: Implement following branches for full support
+//      else if (const NestedNameSpecifier *NNS =
+//               i.get<NestedNameSpecifier>())
+//	{}
+//      else if (const NestedNameSpecifierLoc *NNSLoc =
+//               i.get<NestedNameSpecifierLoc>())
+//	{}
+//      else if (const QualType *Q = i.get<QualType>())
+//	{}
+//      else if (const TypeLoc *T = i.get<TypeLoc>())
+//	{}
+
+      if (!parentNode.empty()) {
+	edgeRowMap.emplace(ENODEID1, std::to_string(nodeID));
+	edgeRowMap.emplace(ENODEID2, parentNode);
+	edgeRowMap.emplace(ETYPE, EDGERELKEYS[IS_PARENT_OF]);
+	writeRow(edgeRowMap, edgeFile, EFIRST, ELAST);
+
+	// Clear edgeRowMap and parentNode before next write
+	edgeRowMap.clear();
+	parentNode.clear();
+      }
   }
 }
 
@@ -165,6 +207,11 @@ void csvWriter::exportStmt(const Stmt *S) {
     nodeRowMap.emplace(LOC, "");
     nodeRowMap.emplace(LOCRANGE, getSourceRange(S->getSourceRange()));
   }
+
+  // Export parent-child to edges.csv
+  const auto &parentArray = getASTContext()->getParents(*S);
+  if (!parentArray.empty())
+    writeParentChildEdges(parentArray);
 }
 
 void csvWriter::exportExpr(const Expr *E) {
@@ -194,9 +241,12 @@ void csvWriter::exportDeclRefExpr(const DeclRefExpr *DRE) {
   // Only in rare cases is a decl that is reference is not yet visited by RAV
   // In such cases, we export declref info to baredeclref column of the node
   // that refs the decl i.e., referee decl info is dumped in referer's node row.
-  if (declNode.empty())
-    nodeRowMap.emplace(BAREDECLREF, getBareDeclRef(llvm::cast<Decl>(DRE->getDecl())));
-  else {
+
+  // TODO: The write to node map should be guarded by (declNode.empty()) check
+  // to avoid writing redundant info in nodes.csv when relationship will
+  // be captured in edges.csv
+  nodeRowMap.emplace(BAREDECLREF, getBareDeclRef(llvm::cast<Decl>(DRE->getDecl())));
+  if (!declNode.empty()) {
     edgeRowMap.emplace(ENODEID1, std::to_string(nodeID));
     edgeRowMap.emplace(ENODEID2, declNode);
     edgeRowMap.emplace(ETYPE, EDGERELKEYS[DECLREF_EXPR]);
@@ -316,6 +366,43 @@ codePropTy csvWriter::getNodeIDFromStmtPtr(const Stmt *S) {
   if (i != stmtNodeMap.end())
     return std::to_string(i->second);
   return codePropTy();
+}
+
+codePropTy csvWriter::getDeclQual(const Decl *D) {
+  std::vector<codePropTy> declQualVec;
+
+  if (Module *M = D->getOwningModule())
+    declQualVec.emplace_back("in " + M->getFullModuleName());
+  if (const NamedDecl *ND = dyn_cast<NamedDecl>(D))
+    if (ND->isHidden())
+      declQualVec.emplace_back("hidden");
+  if (D->isImplicit())
+    declQualVec.emplace_back("implicit");
+  if (D->isUsed())
+    declQualVec.emplace_back("used");
+  else if (D->isThisDeclarationReferenced())
+    declQualVec.emplace_back("referenced");
+  if (D->isInvalidDecl())
+    declQualVec.emplace_back("invalid");
+  if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D))
+    if (FD->isConstexpr())
+      declQualVec.emplace_back("constexpr");
+
+  if (declQualVec.empty())
+    return codePropTy();
+
+  codePropTy declQual;
+  llvm::raw_string_ostream OS(declQual);
+
+  OS << "<";
+  for (auto &i : declQualVec) {
+      if (i != declQualVec.back())
+	OS << i << ", ";
+      else
+	OS << i << ">";
+  }
+
+  return OS.str();
 }
 
 } // end of exporter namespace
