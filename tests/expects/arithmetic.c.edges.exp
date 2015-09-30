@@ -1,0 +1,16 @@
+nodeID:ID	nodeID:ID	type
+2	1	is_parent_of
+3	2	is_parent_of
+4	3	is_parent_of
+5	4	is_parent_of
+6	4	is_parent_of
+7	3	is_parent_of
+8	7	is_parent_of
+8	5	references_decl
+9	7	is_parent_of
+10	3	is_parent_of
+11	10	is_parent_of
+11	6	references_decl
+12	10	is_parent_of
+13	3	is_parent_of
+14	13	is_parent_of
