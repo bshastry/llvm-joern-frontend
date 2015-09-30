@@ -1,5 +1,7 @@
 nodeID:ID	nodeID:ID	type
 2	1	is_parent_of
 3	2	is_parent_of
-4	3	is_parent_of
-5	4	is_parent_of
+4	2	is_parent_of
+5	2	is_parent_of
+6	5	is_parent_of
+7	6	is_parent_of

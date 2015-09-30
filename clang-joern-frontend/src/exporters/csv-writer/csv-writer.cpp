@@ -180,6 +180,10 @@ void csvWriter::exportNamedDecl(const NamedDecl *ND) {
       nodeRowMap.emplace(DECLNAME, ND->getNameAsString());
 }
 
+void csvWriter::exportValueDecl(const ValueDecl *VD) {
+  nodeRowMap.emplace(TYPE, getType(VD->getType()));
+}
+
 void csvWriter::exportTranslationUnitDecl(std::string filename) {
   nodeRowMap.emplace(LOC, filename);
 }
@@ -234,6 +238,26 @@ void csvWriter::exportDeclRefExpr(const DeclRefExpr *DRE) {
   nodeRowMap.emplace(BAREDECLREF, getBareDeclRef(llvm::cast<Decl>(DRE->getDecl())));
   if (!declNode.empty())
     writeEdgeRow(std::to_string(nodeID), declNode, EDGERELKEYS[DECLREF_EXPR]);
+}
+
+void csvWriter::exportCharacterLiteral(const CharacterLiteral *CL) {
+  nodeRowMap.emplace(VALUE, std::to_string(CL->getValue()));
+}
+
+void csvWriter::exportIntegerLiteral(const IntegerLiteral *IL) {
+  bool isSigned = IL->getType()->isSignedIntegerType();
+  nodeRowMap.emplace(VALUE, IL->getValue().toString(10, isSigned));
+}
+
+void csvWriter::exportFloatingLiteral(const FloatingLiteral *FL) {
+  nodeRowMap.emplace(VALUE, std::to_string(FL->getValueAsApproximateDouble()));
+}
+
+void csvWriter::exportStringLiteral(const StringLiteral *SL) {
+  codePropTy slit;
+  llvm::raw_string_ostream OS(slit);
+  SL->outputString(OS);
+  nodeRowMap.emplace(VALUE, OS.str());
 }
 
 void csvWriter::closeFiles() {

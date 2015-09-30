@@ -75,11 +75,16 @@ public:
 
 	void exportDecl(const clang::Decl *D) override;
 	void exportNamedDecl(const clang::NamedDecl *ND) override;
+	void exportValueDecl(const clang::ValueDecl *VD) override;
 	void exportTranslationUnitDecl(std::string filename) override;
 	void exportStmt(const clang::Stmt *S) override;
 	void exportExpr(const clang::Expr *E) override;
 	void exportCastExpr(const clang::CastExpr *E) override;
 	void exportDeclRefExpr(const clang::DeclRefExpr *DRE) override;
+	void exportCharacterLiteral(const clang::CharacterLiteral *CL) override;
+	void exportIntegerLiteral(const clang::IntegerLiteral *IL) override;
+	void exportFloatingLiteral(const clang::FloatingLiteral *FL) override;
+	void exportStringLiteral(const clang::StringLiteral *SL) override;
 
 	// Utility
 	void init();

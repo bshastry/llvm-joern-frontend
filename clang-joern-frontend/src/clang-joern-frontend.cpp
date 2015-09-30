@@ -83,6 +83,11 @@ namespace {
       return true;
     }
 
+    bool VisitValueDecl(ValueDecl *VD) {
+      cW.exportValueDecl(VD);
+      return true;
+    }
+
     bool VisitFunctionDecl(FunctionDecl *FD) {
       return true;
     }
@@ -110,6 +115,26 @@ namespace {
 
     bool VisitDeclRefExpr(DeclRefExpr *DRE) {
       cW.exportDeclRefExpr(DRE);
+      return true;
+    }
+
+    bool VisitCharacterLiteral(CharacterLiteral *CL) {
+      cW.exportCharacterLiteral(CL);
+      return true;
+    }
+
+    bool VisitIntegerLiteral(IntegerLiteral *IL) {
+      cW.exportIntegerLiteral(IL);
+      return true;
+    }
+
+    bool VisitFloatingLiteral(FloatingLiteral *FL) {
+      cW.exportFloatingLiteral(FL);
+      return true;
+    }
+
+    bool VisitStringLiteral(StringLiteral *SL) {
+      cW.exportStringLiteral(SL);
       return true;
     }
 

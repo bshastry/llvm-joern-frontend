@@ -1,6 +1,8 @@
 nodeID:ID	nodeKind	loc	locRange	type	valueKind	value	castKind	declName	semcontext	lexcontext	declqual	baredeclref
 1	TranslationUnit	/home/bhargava/work/gitlab/llvm-joern-frontend/tests/basic.c	 <<invalid sloc>>									
-2	Function	/home/bhargava/work/gitlab/llvm-joern-frontend/tests/basic.c:1:5	 <col:1, line:3:1>					main				
-3	CompoundStmt		 <line:1:12, line:3:1>									
-4	ReturnStmt		 <line:2:2, col:9>									
-5	IntegerLiteral		 <col:9>	<int>								
+2	Function	/home/bhargava/work/gitlab/llvm-joern-frontend/tests/basic.c:1:5	 <col:1, line:3:1>	<int (int, char **)>				main				
+3	ParmVar	line:1:14	 <col:10, col:14>	<int>				argc				
+4	ParmVar	col:27	 <col:20, col:27>	<char **>				argv				
+5	CompoundStmt		 <col:33, line:3:1>									
+6	ReturnStmt		 <line:2:2, col:9>									
+7	IntegerLiteral		 <col:9>	<int>		0						
