@@ -1,0 +1,15 @@
+nodeID:ID	nodeKind	loc	locRange	type	valueKind	value	castKind	declName	semcontext	lexcontext	declqual	baredeclref
+1	TranslationUnit	/home/bhargava/work/gitlab/llvm-joern-frontend/tests/arithmetic.c	 <<invalid sloc>>									
+2	Function	/home/bhargava/work/gitlab/llvm-joern-frontend/tests/arithmetic.c:1:5	 <col:1, line:6:1>					main				
+3	CompoundStmt		 <line:1:12, line:6:1>									
+4	DeclStmt		 <line:2:2, col:10>									
+5	Var	col:6	 <col:2, col:6>					x			<used>	
+6	Var	col:9	 <col:2, col:9>					y			<used>	
+7	BinaryOperator		 <line:3:2, col:6>	<int>								
+8	DeclRefExpr		 <col:2>	<int>	lvalue							<Var, x, <int>>
+9	IntegerLiteral		 <col:6>	<int>								
+10	BinaryOperator		 <line:4:2, col:6>	<int>								
+11	DeclRefExpr		 <col:2>	<int>	lvalue							<Var, y, <int>>
+12	IntegerLiteral		 <col:6>	<int>								
+13	ReturnStmt		 <line:5:2, col:9>									
+14	IntegerLiteral		 <col:9>	<int>								
