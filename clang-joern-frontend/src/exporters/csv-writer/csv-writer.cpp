@@ -169,7 +169,7 @@ void csvWriter::writeParentChildEdges(const ArrayRef<DynTypedNode> &parentsOfNod
 //	{}
 
       if (!parentNode.empty()) {
-	writeEdgeRow(std::string(nodeID), parentNode, EDGERELKEYS[IS_PARENT_OF]);
+	writeEdgeRow(std::to_string(nodeID), parentNode, EDGERELKEYS[IS_PARENT_OF]);
 	parentNode.clear();
       }
   }
