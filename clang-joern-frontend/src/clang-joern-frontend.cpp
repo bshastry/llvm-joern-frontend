@@ -74,74 +74,131 @@ namespace {
 
     // Decls
     bool VisitDecl(Decl *D) {
-      llvm::errs() << "Visit Decl\n";
+      cW.exportDecl(D);
       return true;
     }
 
     bool VisitTranslationUnitDecl(TranslationUnitDecl *TUD) {
-      llvm::errs() << "Visit TUDecl\n";
+      cW.exportTranslationUnitDecl(sourceFilename);
       return true;
     }
 
     bool VisitFunctionDecl(FunctionDecl *FD) {
-      llvm::errs() << "Visit FDecl\n";
       return true;
     }
 
     bool VisitNamedDecl(NamedDecl *ND) {
-      llvm::errs() << "Visit NDecl\n";
+      cW.exportNamedDecl(ND);
       return true;
     }
 
     // Stmts
     bool VisitStmt(Stmt *S) {
-      llvm::errs() << "Visit Stmt\n";
+      cW.exportStmt(S);
       return true;
     }
 
     bool VisitExpr(Expr *E) {
-      llvm::errs() << "Visit Expr\n";
+      cW.exportExpr(E);
       return true;
     }
 
     bool VisitCastExpr(CastExpr *CE) {
-      llvm::errs() << "Visit CExpr\n";
+      cW.exportCastExpr(CE);
       return true;
     }
 
     bool VisitDeclRefExpr(DeclRefExpr *DRE) {
-      llvm::errs() << "Visit DRExpr\n";
+      cW.exportDeclRefExpr(DRE);
       return true;
     }
 
+    // AST nodes in Clang
+    // When visiting an AST node using RAV, there is no easy way
+    // of knowing when to write out contents of the node into a
+    // csv file. So, we defer it to the traverse of the next AST
+    // node i.e., we export an AST node before visiting the next
+    // AST node. Naturally, the last AST node will get left out.
+    // So, we need to explicitly call writeNodeRow() in
+    // ClangASTExportConsumer.
     bool TraverseDecl(Decl *D) {
-      llvm::errs() << "Traverse Decl\n";
+      writeNodeRow();
       return getBaseRAV().TraverseDecl(D);
     }
 
     bool TraverseStmt(Stmt *S) {
-      llvm::errs() << "Traverse Stmt\n";
+      writeNodeRow();
       return getBaseRAV().TraverseStmt(S);
     }
 
     bool TraverseType(QualType T) {
-      llvm::errs() << "Traverse Type\n";
+      writeNodeRow();
       return getBaseRAV().TraverseType(T);
     }
 
-    bool WalkUpFromDecl(Decl *D) {
-      llvm::errs() << "WalkUpFrom Decl\n";
-      return getBaseRAV().WalkUpFromDecl(D);
+    bool TraverseTypeLoc(TypeLoc TL) {
+      writeNodeRow();
+      return getBaseRAV().TraverseTypeLoc(TL);
     }
 
-    bool WalkUpFromStmt(Stmt *S) {
-      llvm::errs() << "WalkUpFrom Stmt\n";
-      return getBaseRAV().WalkUpFromStmt(S);
+    bool TraverseAttr(Attr *At) {
+      writeNodeRow();
+      return getBaseRAV().TraverseAttr(At);
     }
 
-    bool WalkUpFromType(Type *T) {
-      llvm::errs() << "WalkUpFrom Type\n";
-      return getBaseRAV().WalkUpFromType(T);
+    bool TraverseNestedNameSpecifier(NestedNameSpecifier *NNS) {
+      writeNodeRow();
+      return getBaseRAV().TraverseNestedNameSpecifier(NNS);
+    }
+
+    bool TraverseNestedNameSpecifierLoc(NestedNameSpecifierLoc NNS) {
+      writeNodeRow();
+      return getBaseRAV().TraverseNestedNameSpecifierLoc(NNS);
+    }
+
+    bool TraverseDeclarationNameInfo(DeclarationNameInfo NameInfo) {
+      writeNodeRow();
+      return getBaseRAV().TraverseDeclarationNameInfo(NameInfo);
+    }
+
+    bool TraverseTemplateName(TemplateName Template) {
+      writeNodeRow();
+      return getBaseRAV().TraverseTemplateName(Template);
+    }
+
+    bool TraverseTemplateArgument(const TemplateArgument &Arg) {
+      writeNodeRow();
+      return getBaseRAV().TraverseTemplateArgument(Arg);
+    }
+
+    bool TraverseTemplateArgumentLoc(const TemplateArgumentLoc &ArgLoc) {
+      writeNodeRow();
+      return getBaseRAV().TraverseTemplateArgumentLoc(ArgLoc);
+    }
+
+    bool TraverseTemplateArguments(const TemplateArgument *Args,
+                                   unsigned NumArgs) {
+      writeNodeRow();
+      return getBaseRAV().TraverseTemplateArguments(Args, NumArgs);
+    }
+
+    bool TraverseConstructorInitializer(CXXCtorInitializer *Init) {
+      writeNodeRow();
+      return getBaseRAV().TraverseConstructorInitializer(Init);
+    }
+
+    bool TraverseLambdaCapture(LambdaExpr *LE, const LambdaCapture *C) {
+      writeNodeRow();
+      return getBaseRAV().TraverseLambdaCapture(LE, C);
+    }
+
+    bool TraverseLambdaBody(LambdaExpr *LE) {
+      writeNodeRow();
+      return getBaseRAV().TraverseLambdaBody(LE);
+    }
+
+    void writeNodeRow() {
+      cW.writeNodeRowWrapper();
     }
 
   private:
@@ -164,6 +221,8 @@ namespace {
       // Traversing the translation unit decl via a RecursiveASTVisitor
       // will visit all nodes in the AST.
       Visitor.TraverseDecl(Context.getTranslationUnitDecl());
+      // Export the very last AST node in TU
+      Visitor.writeNodeRow();
     }
   private:
     // A RecursiveASTVisitor implementation.
