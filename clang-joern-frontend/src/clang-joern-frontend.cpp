@@ -74,55 +74,54 @@ namespace {
 
     // Decls
     bool VisitDecl(Decl *D) {
-      cW.exportDecl(D);
+      llvm::errs() << "Visit Decl\n";
       return true;
     }
 
     bool VisitTranslationUnitDecl(TranslationUnitDecl *TUD) {
-      cW.exportTranslationUnitDecl(sourceFilename);
+      llvm::errs() << "Visit TUDecl\n";
       return true;
     }
 
     bool VisitNamedDecl(NamedDecl *ND) {
-      cW.exportNamedDecl(ND);
+      llvm::errs() << "Visit NDecl\n";
       return true;
     }
 
     // Stmts
     bool VisitStmt(Stmt *S) {
-      cW.exportStmt(S);
+      llvm::errs() << "Visit Stmt\n";
       return true;
     }
 
     bool VisitExpr(Expr *E) {
-      cW.exportExpr(E);
+      llvm::errs() << "Visit Expr\n";
       return true;
     }
 
     bool VisitCastExpr(CastExpr *CE) {
-      cW.exportCastExpr(CE);
+      llvm::errs() << "Visit CExpr\n";
       return true;
     }
 
     bool VisitDeclRefExpr(DeclRefExpr *DRE) {
-      cW.exportDeclRefExpr(DRE);
+      llvm::errs() << "Visit DRExpr\n";
       return true;
     }
 
     bool TraverseDecl(Decl *D) {
-      // Do something and call base class's traversedecl.
-      // The base class's traversedecl actually traverses the AST.
-      // Here we only use the entry point for writing an entry into
-      // the CSV file(s)
-      cW.writeNodeRowWrapper();
-      cW.flushBuffers();
+      llvm::errs() << "Traverse Decl\n";
       return getBaseRAV().TraverseDecl(D);
     }
 
     bool TraverseStmt(Stmt *S) {
-      cW.writeNodeRowWrapper();
-      cW.flushBuffers();
+      llvm::errs() << "Traverse Stmt\n";
       return getBaseRAV().TraverseStmt(S);
+    }
+
+    bool TraverseType(QualType T) {
+      llvm::errs() << "Traverse Type\n";
+      return getBaseRAV().TraverseType(T);
     }
 
   private:
