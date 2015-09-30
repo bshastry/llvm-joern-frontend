@@ -88,9 +88,7 @@ public:
 	                  colIndexTy end);
 	void writeEdgeRow(codePropTy node1, codePropTy node2, codePropTy rel);
 	void writeNodeRowWrapper();
-	void writeEdgeRowWrapper();
 	void writeHeaders();
-	void flushBuffers();
 	codePropTy getNodeIDFromDeclPtr(const clang::Decl *D);
 	codePropTy getNodeIDFromStmtPtr(const clang::Stmt *S);
 	void writeParentChildEdges(const

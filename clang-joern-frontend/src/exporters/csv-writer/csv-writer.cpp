@@ -92,19 +92,11 @@ void csvWriter::init() {
   }
 }
 
-void csvWriter::flushBuffers() {
-  nodeRowMap.clear();
-  edgeRowMap.clear();
-}
-
 void csvWriter::writeNodeRowWrapper() {
-  if (!nodeRowMap.empty())
+  if (!nodeRowMap.empty()) {
     writeRow(nodeRowMap, nodeFile, FIRST, LAST);
-}
-
-void csvWriter::writeEdgeRowWrapper() {
-  if (!edgeRowMap.empty())
-    writeRow(edgeRowMap, edgeFile, EFIRST, ELAST);
+    nodeRowMap.clear();
+  }
 }
 
 void csvWriter::writeRow(csvRowTy &row, fileTy &file, colIndexTy start, colIndexTy end) {
@@ -177,13 +169,7 @@ void csvWriter::writeParentChildEdges(const ArrayRef<DynTypedNode> &parentsOfNod
 //	{}
 
       if (!parentNode.empty()) {
-	edgeRowMap.emplace(ENODEID1, std::to_string(nodeID));
-	edgeRowMap.emplace(ENODEID2, parentNode);
-	edgeRowMap.emplace(ETYPE, EDGERELKEYS[IS_PARENT_OF]);
-	writeRow(edgeRowMap, edgeFile, EFIRST, ELAST);
-
-	// Clear edgeRowMap and parentNode before next write
-	edgeRowMap.clear();
+	writeEdgeRow(std::string(nodeID), parentNode, EDGERELKEYS[IS_PARENT_OF]);
 	parentNode.clear();
       }
   }
@@ -246,13 +232,8 @@ void csvWriter::exportDeclRefExpr(const DeclRefExpr *DRE) {
   // to avoid writing redundant info in nodes.csv when relationship will
   // be captured in edges.csv
   nodeRowMap.emplace(BAREDECLREF, getBareDeclRef(llvm::cast<Decl>(DRE->getDecl())));
-  if (!declNode.empty()) {
-    edgeRowMap.emplace(ENODEID1, std::to_string(nodeID));
-    edgeRowMap.emplace(ENODEID2, declNode);
-    edgeRowMap.emplace(ETYPE, EDGERELKEYS[DECLREF_EXPR]);
-    writeRow(edgeRowMap, edgeFile, EFIRST, ELAST);
-    edgeRowMap.clear();
-  }
+  if (!declNode.empty())
+    writeEdgeRow(std::to_string(nodeID), declNode, EDGERELKEYS[DECLREF_EXPR]);
 }
 
 void csvWriter::closeFiles() {
