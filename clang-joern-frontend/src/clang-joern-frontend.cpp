@@ -83,6 +83,11 @@ namespace {
       return true;
     }
 
+    bool VisitFunctionDecl(FunctionDecl *FD) {
+      llvm::errs() << "Visit FDecl\n";
+      return true;
+    }
+
     bool VisitNamedDecl(NamedDecl *ND) {
       llvm::errs() << "Visit NDecl\n";
       return true;
@@ -122,6 +127,21 @@ namespace {
     bool TraverseType(QualType T) {
       llvm::errs() << "Traverse Type\n";
       return getBaseRAV().TraverseType(T);
+    }
+
+    bool WalkUpFromDecl(Decl *D) {
+      llvm::errs() << "WalkUpFrom Decl\n";
+      return getBaseRAV().WalkUpFromDecl(D);
+    }
+
+    bool WalkUpFromStmt(Stmt *S) {
+      llvm::errs() << "WalkUpFrom Stmt\n";
+      return getBaseRAV().WalkUpFromStmt(S);
+    }
+
+    bool WalkUpFromType(Type *T) {
+      llvm::errs() << "WalkUpFrom Type\n";
+      return getBaseRAV().WalkUpFromType(T);
     }
 
   private:
