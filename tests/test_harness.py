@@ -42,6 +42,9 @@ class TestBasic(SimpleTester):
     def test_arithmetic(self):
         self.assertEqual(testinput('arithmetic.c'), True,
                          'Test on arithmetic.c failed')
+    def test_cxxrecord(self):
+        self.assertEqual(testinput('cxxrecord.cpp'), True,
+                         'Test on cxxrecord.cpp failed')
 
 if __name__ == '__main__':
     unittest.main()

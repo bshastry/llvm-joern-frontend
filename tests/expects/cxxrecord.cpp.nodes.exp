@@ -1,0 +1,8 @@
+nodeID:ID	nodeKind	loc	locRange	type	valueKind	value	castKind	declName	semcontext	lexcontext	declqual	baredeclref
+1	TranslationUnit	/home/bhargava/work/gitlab/llvm-joern-frontend/tests/cxxrecord.cpp	 <<invalid sloc>>									
+2	UsingDirective	/home/bhargava/work/gitlab/llvm-joern-frontend/tests/cxxrecord.cpp:5:17	 <col:1, col:17>					<using-directive>				
+3	CXXRecord	line:7:7	 <col:1, line:12:1>					rec				
+4	AccessSpec	line:8:1	 <col:1, col:7>									
+5	Field	line:9:6	 <col:2, col:6>	<int>				a				
+6	Field	line:10:7	 <col:2, col:7>	<_Bool>				b				
+7	Field	line:11:27	 <col:2, col:27>	<std::vector<std::string>, class std::vector<class std::basic_string<char>, class std::allocator<class std::basic_string<char> > >>				c				

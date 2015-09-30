@@ -64,6 +64,9 @@ Analyze("analyze", cl::desc(Options->getOptionHelpText(options::OPT_analyze)),
 static cl::opt<bool>
 ASTExport("ast-export", cl::desc("Export Clang ASTs to Neo4j CSV batch importer format i.e., nodes.csv and edges.csv"),
         cl::cat(ClangJoernCategory));
+static cl::opt<bool>
+ASTSysHeader("sys-header", cl::desc("Include declarations in system headers"),
+          cl::cat(ClangJoernCategory));
 
 namespace {
   class ClangASTExporter
@@ -148,11 +151,17 @@ namespace {
     // ClangASTExportConsumer.
     bool TraverseDecl(Decl *D) {
       writeNodeRow();
+      if (!ASTSysHeader && !isa<TranslationUnitDecl>(D) &&
+	  isLocInSystemHeaderFile(D->getLocation()))
+	return true;
       return getBaseRAV().TraverseDecl(D);
     }
 
     bool TraverseStmt(Stmt *S) {
       writeNodeRow();
+      if (!ASTSysHeader && isSRInSystemHeaderFile(S->getSourceRange().getBegin(),
+                                                  S->getSourceRange().getEnd()))
+	return true;
       return getBaseRAV().TraverseStmt(S);
     }
 
@@ -233,6 +242,15 @@ namespace {
 
     RecursiveASTVisitor<ClangASTExporter> &getBaseRAV() {
       return *static_cast<RecursiveASTVisitor<ClangASTExporter> *>(this);
+    }
+
+    bool isLocInSystemHeaderFile(SourceLocation SL) {
+      if (SL.isInvalid()) return true;
+      return (Context->getSourceManager().isInSystemHeader(SL));
+    }
+
+    bool isSRInSystemHeaderFile(SourceLocation start, SourceLocation end) {
+      return (isLocInSystemHeaderFile(start) && isLocInSystemHeaderFile(end));
     }
 
   };

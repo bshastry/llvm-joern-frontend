@@ -8,5 +8,10 @@
         "directory": "/home/bhargava/work/gitlab/llvm-joern-frontend/tests",
         "file": "/home/bhargava/work/gitlab/llvm-joern-frontend/tests/basic.c",
         "command": "/usr/bin/cc -c /home/bhargava/work/gitlab/llvm-joern-frontend/tests/basic.c -o /home/bhargava/work/gitlab/llvm-joern-frontend/tests/basic.o"
+   },
+   {
+	"directory": "/home/bhargava/work/gitlab/llvm-joern-frontend/tests",
+	"file": "/home/bhargava/work/gitlab/llvm-joern-frontend/tests/cxxrecord.cpp",
+	"command": "/usr/bin/c++ -c /home/bhargava/work/gitlab/llvm-joern-frontend/tests/cxxrecord.cpp -o /home/bhargava/work/gitlab/llvm-joern-frontend/tests/cxxrecord.o"
    }
 ]
