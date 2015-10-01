@@ -13,5 +13,10 @@
 	"directory": "/home/bhargava/work/gitlab/llvm-joern-frontend/tests",
 	"file": "/home/bhargava/work/gitlab/llvm-joern-frontend/tests/cxxrecord.cpp",
 	"command": "/usr/bin/c++ -c /home/bhargava/work/gitlab/llvm-joern-frontend/tests/cxxrecord.cpp -o /home/bhargava/work/gitlab/llvm-joern-frontend/tests/cxxrecord.o"
+   },
+   {
+	"directory": "/home/bhargava/work/gitlab/llvm-joern-frontend/tests",
+	"file": "/home/bhargava/work/gitlab/llvm-joern-frontend/tests/interp.c",
+	"command": "/usr/bin/cc -c /home/bhargava/work/gitlab/llvm-joern-frontend/tests/interp.c -o /home/bhargava/work/gitlab/llvm-joern-frontend/tests/interp.o"
    }
 ]
