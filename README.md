@@ -2,24 +2,27 @@
 
 This repository contains software that exports Clang internals (e.g., AST) into a [neo4J][3] database. Ultimately, a tool that generates [Code property graphs][4] using Clang is desired.
 
+### Pre-requisites
+
+- Debian/Ubuntu OS
+- LLVM & Clang 3.6 dev libraries. Check out llvm [apt][5] page for info on how to install them
+
 ### Usage
 
-This is work in progress, so take instructions here with spoonsfull of salt.
-
-Clang libtooling tool can be used as follows:
+- First read [libtooling][2] doc on how to set up libtooling for code under analysis
+- Then, do:
 
 ```bash
 $ cd $WORKING_DIR/clang-joern-frontend
 $ mkdir build
 $ cd build
 $ cmake -DCJ_LLVM_BUILD_ROOT_PATH=<PATH_TO_LLVM-3.6> -DCJ_LLVM_ROOT_PATH=<PATH_TO_LLVM-3.6> ../src/ &> /dev/null
-$ make && make install
-$ cd $SOME_PROJECT_SRC
+## Clang-joern binary and csv-exporter library will be installed in /usr
+$ make && sudo make install
+$ cd $ANALYSIS_TARGET
 $ clang-joern -help | less
-$ clang-joern -p <PATH_TO_PROJECT_BUILD> -ast-dump <PATH_TO_SOME_SOURCE_FILE>
+$ clang-joern -p <PATH_TO_PROJECT_BUILD> -ast-export <PATH_TO_SOME_SOURCE_FILE>
 ```
-
-Work on the AST Export feature (-ast-export) is in progress.
 
 Clangpy bindings can be used as follows:
 
@@ -40,3 +43,4 @@ Since libclang bindings are inferior to libtooling in terms of richness of AST, 
 [2]: http://clang.llvm.org/docs/LibTooling.html
 [3]: http://neo4j.com/
 [4]: https://user.informatik.uni-goettingen.de/~krieck/docs/2014-ieeesp.pdf
+[5]: http://llvm.org/apt/
